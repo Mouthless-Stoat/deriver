@@ -98,8 +98,18 @@ impl Expr {
             Self::Mul(f, g) => f.clone().derive().mul(*g.clone()).add(g.derive().mul(*f)),
 
             Self::Exp(f, g) => match (*f, *g) {
+                // x^n -> nx^(n-1)
+                (x @ Self::Var, a @ Self::Num(n)) => a.mul(x.exp(n - 1.0)),
+
+                // f(x)^n
                 (f, a @ Self::Num(n)) => a.mul(f.clone().exp(n - 1.0)).mul(f.derive()),
+
+                // n^x
+                (a @ Self::Num(_), x @ Self::Var) => Self::Num(1.0).div(x.mul(Self::Num(E).log(a))),
+
+                // n^f(x)
                 (a @ Self::Num(_), f) => a.clone().exp(f.clone()).mul(Self::Num(E).log(a)).mul(f.derive()),
+
                 _ => panic!("Exponents not in the form of f(x)^n or n^f(x) where n is a number are too complicated can't compute"),
             },
             Self::Log(f, g) => match (*f, *g) {
