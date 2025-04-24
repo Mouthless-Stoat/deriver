@@ -2,11 +2,9 @@ mod expr;
 use expr::*;
 
 fn main() {
-    let e = Expr::Var
-        .exp(5.0)
-        .mul(1.4)
-        .sub(Expr::Var.exp(2.0).mul(2.5))
-        .sub(6.7);
+    let e = Expr::Num(2.0)
+        .mul(Expr::Var.exp(2.0))
+        .div(Expr::Var.add(2.0));
 
     println!("{e}");
     println!("{}", e.derive());

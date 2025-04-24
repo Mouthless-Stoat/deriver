@@ -19,13 +19,6 @@ impl Expr {
             Self::Mul(f, g) => f.clone().derive().mul(*g.clone()).add(g.derive().mul(*f)),
 
             Self::Exp(f, g) => match (*f, *g) {
-                // Variable convention:
-                // x for any variable
-                // f for any function
-                // a for any exponent
-                // n for the value of any exponent
-                // f for any function
-
                 // x^a -> ax^(a-1)
                 (x @ Self::Var, a @ Self::Num(n)) => a.mul(x.exp(n - 1.0)),
 
