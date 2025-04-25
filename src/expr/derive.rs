@@ -32,12 +32,18 @@ impl Expr {
                 (e @ Self::Num(E), f) => e.exp(f.clone()).mul(f.derive()),
 
                 // a^x -> a^x * ln a
-                (a @ Self::Num(_), x @ Self::Var) => a.clone().exp(x).mul(Self::ln(a)),
+                (a @ Self::Num(_), x @ Self::Var) => a.clone().exp(x).mul(a.ln()),
 
                 // a^f(x) -> a^f(x) * ln a * f'(x)
-                (a @ Self::Num(_), f) => a.clone().exp(f.clone()).mul(Self::ln(a)).mul(f.derive()),
+                (a @ Self::Num(_), f) => a.clone().exp(f.clone()).mul(a.ln()).mul(f.derive()),
 
-                _ => panic!("Exponents not in the form of f(x)^n or n^f(x) where n is a number are too complicated can't compute"),
+                // f(x)^g(x) -> f(x)^g(x) * (g'(x)*ln f(x) + f'(x)*g(x)/f(x))
+                (f, g) => f.clone().exp(g.clone()).mul(
+                    g.clone()
+                        .derive()
+                        .mul(f.clone().ln())
+                        .mul(f.clone().derive().mul(g).div(f)),
+                ),
             },
 
             Self::Log(f, g) => match (*f, *g) {
@@ -51,12 +57,22 @@ impl Expr {
                 (a @ Self::Num(_), f) => f.clone().derive().div(f.mul(Self::ln(a))),
 
                 // log_x a -> (ln a)/(x (ln x)^2)
-                (x @ Self::Var, a @ Self::Num(_)) => Self::ln(a).div(x.clone().mul(Self::ln(x).exp(2.0))),
+                (x @ Self::Var, a @ Self::Num(_)) => {
+                    Self::ln(a).div(x.clone().mul(Self::ln(x).exp(2.0)))
+                }
 
                 // log_f(x) a -> (ln a)/(f(x) (ln f(x))^2) * ln f(x)
-                (f, a @ Self::Num(_)) => Self::ln(a).div(f.clone().mul(Self::ln(f.clone()).exp(2.0))).mul(f.derive()),
+                (f, a @ Self::Num(_)) => Self::ln(a)
+                    .div(f.clone().mul(Self::ln(f.clone()).exp(2.0)))
+                    .mul(f.derive()),
 
-                _ => panic!("Logs not in the form of log_n (f(x)) or log_f(x) (n) where n is a number are too complicated can't compute"),
+                (f, g) => g
+                    .clone()
+                    .derive()
+                    .mul(f.clone().ln())
+                    .div(g.clone())
+                    .sub(f.clone().derive().mul(g.ln()).div(f.clone()))
+                    .div(f.ln().exp(2.0)),
             },
 
             Self::Trig(func, f) => match func {
@@ -64,10 +80,15 @@ impl Expr {
                 Trig::Tan => f.clone().trig(Trig::Sec).exp(2.0),
                 Trig::Sec => f.clone().trig(Trig::Sec).mul(f.clone().trig(Trig::Tan)),
 
-                Trig::Cos => f.clone().trig(Trig::Sin).mul(-1.0),
-                Trig::Cot => f.clone().trig(Trig::Csc).exp(2.0).mul(-1.0),
-                Trig::Csc => f.clone().trig(Trig::Csc).mul(f.clone().trig(Trig::Cot)).mul(-1.0),
-            }.mul(f.derive()),
+                Trig::Cos => f.clone().trig(Trig::Sin).neg(),
+                Trig::Cot => f.clone().trig(Trig::Csc).exp(2.0).neg(),
+                Trig::Csc => f
+                    .clone()
+                    .trig(Trig::Csc)
+                    .mul(f.clone().trig(Trig::Cot))
+                    .neg(),
+            }
+            .mul(f.derive()),
 
             Self::Var => Self::Num(1.0),
             Self::Num(_) => Self::Num(0.0),

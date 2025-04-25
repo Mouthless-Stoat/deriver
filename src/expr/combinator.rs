@@ -35,8 +35,8 @@ impl Expr {
         Self::Log(Box::new(self), Box::new(f.into()))
     }
 
-    pub fn ln(f: impl Into<Expr>) -> Self {
-        Self::Log(Box::new(E.into()), Box::new(f.into()))
+    pub fn ln(self) -> Self {
+        Self::Log(Box::new(E.into()), Box::new(self))
     }
 
     /// Apply a trig function to this value.
@@ -56,5 +56,9 @@ impl Expr {
 
             _ => panic!("Tried to flip a non binary value"),
         }
+    }
+
+    pub fn neg(self) -> Self {
+        self.mul(-1.0)
     }
 }
