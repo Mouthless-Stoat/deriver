@@ -7,14 +7,34 @@ impl Display for Expr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             // catch all cases
-            Self::Add(a, b) => write!(f, "({a} + {b})"),
-            Self::Sub(a, b) => write!(f, "({a} - {b})"),
-            Self::Div(a, b) => write!(f, "({a} / {b})"),
-            Self::Mul(a, b) => write!(f, "({a} * {b})"),
-            Self::Exp(a, b) => write!(f, "({a}^{b})"),
+            t @ (Self::Add(a, b)
+            | Self::Sub(a, b)
+            | Self::Div(a, b)
+            | Self::Mul(a, b)
+            | Self::Exp(a, b)
+            | Self::Log(a, b)) => {
+                let mut a_str = a.to_string();
+                let mut b_str = b.to_string();
 
-            Self::Log(e, a) if matches!(**e, Self::Num(E)) => write!(f, "(ln {a})"),
-            Self::Log(a, b) => write!(f, "(log_{a} {b})"),
+                if **a < *t {
+                    a_str = format!("({a})");
+                }
+
+                if **b < *t {
+                    b_str = format!("({b})");
+                }
+
+                match t {
+                    Expr::Add(..) => write!(f, "{a} + {b}"),
+                    Expr::Sub(..) => write!(f, "{a} - {b}"),
+                    Expr::Mul(..) => write!(f, "{a} * {b}"),
+                    Expr::Div(..) => write!(f, "{a} / {b}"),
+                    Expr::Exp(..) => write!(f, "{a}^{b}"),
+                    Expr::Log(e, ..) if matches!(**e, Self::Num(E)) => write!(f, "ln {b}"),
+                    Expr::Log(..) => write!(f, "log_{a} {b}"),
+                    _ => unreachable!(),
+                }
+            }
 
             Self::Trig(t, a) => write!(
                 f,
