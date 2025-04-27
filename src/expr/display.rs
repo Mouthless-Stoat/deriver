@@ -1,58 +1,57 @@
 use std::f64::consts::E;
 use std::fmt::Display;
 
-use super::{Expr, Trig};
+use crate::{
+    Bin::*,
+    Expr::{self, *},
+    Trig::*,
+};
 
 impl Display for Expr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             // catch all cases
-            t @ (Self::Add(a, b)
-            | Self::Sub(a, b)
-            | Self::Div(a, b)
-            | Self::Mul(a, b)
-            | Self::Exp(a, b)
-            | Self::Log(a, b)) => {
+            Bin(t, a, b) => {
                 let mut a_str = a.to_string();
                 let mut b_str = b.to_string();
 
-                if **a < *t {
+                if **a < *self {
                     a_str = format!("({a})");
                 }
 
-                if **b < *t {
+                if **b < *self {
                     b_str = format!("({b})");
                 }
 
                 match t {
-                    Expr::Add(..) => write!(f, "{a} + {b}"),
-                    Expr::Sub(..) => write!(f, "{a} - {b}"),
-                    Expr::Mul(..) => write!(f, "{a} * {b}"),
-                    Expr::Div(..) => write!(f, "{a} / {b}"),
-                    Expr::Exp(..) => write!(f, "{a}^{b}"),
-                    Expr::Log(e, ..) if matches!(**e, Self::Num(E)) => write!(f, "ln {b}"),
-                    Expr::Log(..) => write!(f, "log_{a} {b}"),
+                    Add => write!(f, "{a_str} + {b_str}"),
+                    Sub => write!(f, "{a_str} - {b_str}"),
+                    Mul => write!(f, "{a_str} * {b_str}"),
+                    Div => write!(f, "{a_str} / {b_str}"),
+                    Exp => write!(f, "{a_str}^{b_str}"),
+                    Log if matches!(**a, Self::Num(E)) => write!(f, "ln {b_str}"),
+                    Log => write!(f, "log_{a_str} {b_str}"),
                     _ => unreachable!(),
                 }
             }
 
-            Self::Trig(t, a) => write!(
+            Trig(t, a) => write!(
                 f,
                 "{} {}",
                 match t {
-                    Trig::Sin => "sin",
-                    Trig::Cos => "cos",
-                    Trig::Tan => "tan",
-                    Trig::Csc => "csc",
-                    Trig::Sec => "sec",
-                    Trig::Cot => "cot",
+                    Sin => "sin",
+                    Cos => "cos",
+                    Tan => "tan",
+                    Csc => "csc",
+                    Sec => "sec",
+                    Cot => "cot",
                 },
                 a
             ),
 
-            Self::Var => write!(f, "x"),
-            Self::Num(E) => write!(f, "e"),
-            Self::Num(n) => write!(f, "{n}"),
+            Var => write!(f, "x"),
+            Num(E) => write!(f, "e"),
+            Num(n) => write!(f, "{n}"),
         }
     }
 }

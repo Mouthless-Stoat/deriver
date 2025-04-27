@@ -13,21 +13,22 @@ pub enum Trig {
     Cot,
 }
 
+#[derive(Clone, Copy, Debug)]
+pub enum Bin {
+    Add,
+    Sub,
+    Div,
+    Mul,
+    /// 0 is base, 1 is power
+    Exp,
+    /// 0 is base, 1 is augument
+    Log,
+}
+
 #[derive(Clone, Debug)]
 pub enum Expr {
-    Add(Box<Expr>, Box<Expr>),
-    Sub(Box<Expr>, Box<Expr>),
-
-    Div(Box<Expr>, Box<Expr>),
-    Mul(Box<Expr>, Box<Expr>),
-
-    /// 0 is base, 1 is exponent
-    Exp(Box<Expr>, Box<Expr>),
-    /// 0 is base, 1 is value
-    Log(Box<Expr>, Box<Expr>),
-
+    Bin(Bin, Box<Expr>, Box<Expr>),
     Trig(Trig, Box<Expr>),
-
     Var,
     Num(f64),
 }
@@ -47,9 +48,12 @@ impl Expr {
 
     pub fn precedence(&self) -> usize {
         match self {
-            Expr::Add(..) | Expr::Sub(..) => 1,
-            Expr::Div(..) | Expr::Mul(..) => 2,
-            Expr::Exp(..) | Expr::Log(..) | Expr::Trig(..) => 3,
+            Expr::Bin(t, ..) => match t {
+                Bin::Add | Bin::Sub => 1,
+                Bin::Div | Bin::Mul => 2,
+                Bin::Exp | Bin::Log => 3,
+            },
+            Expr::Trig(..) => 3,
             Expr::Var | Expr::Num(_) => 100,
         }
     }

@@ -1,26 +1,34 @@
 use std::f64::consts::E;
 
-use super::{Expr, Trig};
+use crate::{
+    Bin::*,
+    Expr::{self, *},
+    Trig::*,
+};
 
 impl Expr {
     pub fn derive(self) -> Self {
         match self {
-            Self::Mul(a, f) | Self::Mul(f, a) if a.is_num() => a.mul(f.derive()),
+            Bin(Mul, a, f) | Bin(Mul, f, a) if a.is_num() => a.mul(f.derive()),
 
-            Self::Add(f, g) => f.derive().add(g.derive()),
-            Self::Sub(f, g) => f.derive().sub(g.derive()),
+            Bin(Add, f, g) => f.derive().add(g.derive()),
+            Bin(Sub, f, g) => f.derive().sub(g.derive()),
 
-            Self::Div(f, g) => f
+            Bin(Div, f, g) => f
                 .clone()
                 .derive()
                 .mul(*g.clone())
                 .add(f.mul(g.clone().derive()))
                 .div(g.exp(2.0)),
-            Self::Mul(f, g) => f.clone().derive().mul(*g.clone()).add(g.derive().mul(*f)),
+            Bin(Mul, f, g) => f.clone().derive().mul(*g.clone()).add(g.derive().mul(*f)),
 
-            Self::Exp(f, g) => match (*f, *g) {
+            Bin(Exp, f, g) => match (*f, *g) {
                 // x^a -> ax^(a-1)
-                (x @ Self::Var, a @ Self::Num(n)) => a.mul(x.exp(n - 1.0)),
+                (x @ Self::Var, a @ Self::Num(n)) => match n - 1.0 {
+                    0.0 => a,
+                    1.0 => a.mul(x),
+                    p => a.mul(x.exp(p)),
+                },
 
                 // f(x)^n -> af(x)^(a-1)*f'(x)
                 (f, a @ Self::Num(n)) => a.mul(f.clone().exp(n - 1.0)).mul(f.derive()),
@@ -46,7 +54,7 @@ impl Expr {
                 ),
             },
 
-            Self::Log(f, g) => match (*f, *g) {
+            Bin(Log, f, g) => match (*f, *g) {
                 // ln x -> 1/x
                 (Self::Num(E), x @ Self::Var) => Self::Num(1.0).div(x),
 
@@ -74,24 +82,19 @@ impl Expr {
                     .sub(f.clone().derive().mul(g.ln()).div(f.clone()))
                     .div(f.ln().exp(2.0)),
             },
+            Trig(func, f) => match func {
+                Sin => f.clone().trig(Cos),
+                Tan => f.clone().trig(Sec).exp(2.0),
+                Sec => f.clone().trig(Sec).mul(f.clone().trig(Tan)),
 
-            Self::Trig(func, f) => match func {
-                Trig::Sin => f.clone().trig(Trig::Cos),
-                Trig::Tan => f.clone().trig(Trig::Sec).exp(2.0),
-                Trig::Sec => f.clone().trig(Trig::Sec).mul(f.clone().trig(Trig::Tan)),
-
-                Trig::Cos => f.clone().trig(Trig::Sin).neg(),
-                Trig::Cot => f.clone().trig(Trig::Csc).exp(2.0).neg(),
-                Trig::Csc => f
-                    .clone()
-                    .trig(Trig::Csc)
-                    .mul(f.clone().trig(Trig::Cot))
-                    .neg(),
+                Cos => f.clone().trig(Sin).neg(),
+                Cot => f.clone().trig(Csc).exp(2.0).neg(),
+                Csc => f.clone().trig(Csc).mul(f.clone().trig(Cot)).neg(),
             }
             .mul(f.derive()),
 
-            Self::Var => Self::Num(1.0),
-            Self::Num(_) => Self::Num(0.0),
+            Var => Self::Num(1.0),
+            Num(_) => Self::Num(0.0),
         }
     }
 }

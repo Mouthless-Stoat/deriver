@@ -1,17 +1,7 @@
-mod expr;
-use expr::*;
+use stoat_prime::Expr;
 
 fn main() {
-    let e = Expr::Num(2.0)
-        .mul(Expr::Var.exp(2.0))
-        .div(Expr::Var.add(2.0));
+    let e = Expr::Num(2.0).mul(Expr::Var.exp(7)).add(Expr::Var.exp(9.0));
 
-    println!("{e}");
     println!("{}", e.derive());
-}
-
-impl From<f64> for Expr {
-    fn from(value: f64) -> Self {
-        Expr::Num(value)
-    }
 }
