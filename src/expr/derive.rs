@@ -1,10 +1,6 @@
 use std::f64::consts::E;
 
-use crate::{
-    Bin::*,
-    Expr::{self, *},
-    Trig::*,
-};
+use crate::prelude::*;
 
 impl Expr {
     pub fn derive(self) -> Self {

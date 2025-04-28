@@ -25,6 +25,36 @@ pub enum Bin {
     Log,
 }
 
+impl Bin {
+    pub fn precedence(&self) -> usize {
+        match self {
+            Bin::Add | Bin::Sub => 1,
+            Bin::Div | Bin::Mul => 2,
+            Bin::Exp | Bin::Log => 3,
+        }
+    }
+}
+
+impl PartialEq for Bin {
+    fn eq(&self, other: &Self) -> bool {
+        self.precedence() == other.precedence()
+    }
+}
+
+impl Eq for Bin {}
+
+impl Ord for Bin {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.precedence().cmp(&other.precedence())
+    }
+}
+
+impl PartialOrd for Bin {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum Expr {
     Bin(Bin, Box<Expr>, Box<Expr>),
@@ -48,11 +78,7 @@ impl Expr {
 
     pub fn precedence(&self) -> usize {
         match self {
-            Expr::Bin(t, ..) => match t {
-                Bin::Add | Bin::Sub => 1,
-                Bin::Div | Bin::Mul => 2,
-                Bin::Exp | Bin::Log => 3,
-            },
+            Expr::Bin(t, ..) => t.precedence(),
             Expr::Trig(..) => 3,
             Expr::Var | Expr::Num(_) => 100,
         }

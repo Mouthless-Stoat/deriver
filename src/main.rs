@@ -1,7 +1,10 @@
-use stoat_prime::Expr;
+use stoat_prime::prelude::*;
 
 fn main() {
-    let e = Expr::Num(2.0).mul(Expr::Var.exp(7)).add(Expr::Var.exp(9.0));
+    let mut e = Var.exp(5);
 
-    println!("{}", e.derive());
+    for i in 0..10 {
+        e = e.derive();
+        println!("{}", e);
+    }
 }
