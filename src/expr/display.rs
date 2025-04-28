@@ -31,7 +31,6 @@ impl Display for Expr {
                     Exp => write!(f, "{a_str}^{b_str}"),
                     Log if matches!(**a, Self::Num(E)) => write!(f, "ln {b_str}"),
                     Log => write!(f, "log_{a_str} {b_str}"),
-                    _ => unreachable!(),
                 }
             }
 
