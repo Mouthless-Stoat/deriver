@@ -20,26 +20,26 @@ impl Expr {
 
             Bin(Exp, f, g) => match (*f, *g) {
                 // x^a -> ax^(a-1)
-                (x @ Self::Var, a @ Self::Num(n)) => match n - 1.0 {
+                (x @ Var, a @ Num(n)) => match n - 1.0 {
                     0.0 => a,
                     1.0 => a.mul(x),
                     p => a.mul(x.exp(p)),
                 },
 
                 // f(x)^n -> af(x)^(a-1)*f'(x)
-                (f, a @ Self::Num(n)) => a.mul(f.clone().exp(n - 1.0)).mul(f.derive()),
+                (f, a @ Num(n)) => a.mul(f.clone().exp(n - 1.0)).mul(f.derive()),
 
                 // e^x -> e^x
-                (e @ Self::Num(E), x @ Self::Var) => e.exp(x),
+                (e @ Num(E), x @ Var) => e.exp(x),
 
                 // e^f(x) -> e^f(x) * f'(x)
-                (e @ Self::Num(E), f) => e.exp(f.clone()).mul(f.derive()),
+                (e @ Num(E), f) => e.exp(f.clone()).mul(f.derive()),
 
                 // a^x -> a^x * ln a
-                (a @ Self::Num(_), x @ Self::Var) => a.clone().exp(x).mul(a.ln()),
+                (a @ Num(_), x @ Var) => a.clone().exp(x).mul(a.ln()),
 
                 // a^f(x) -> a^f(x) * ln a * f'(x)
-                (a @ Self::Num(_), f) => a.clone().exp(f.clone()).mul(a.ln()).mul(f.derive()),
+                (a @ Num(_), f) => a.clone().exp(f.clone()).mul(a.ln()).mul(f.derive()),
 
                 // f(x)^g(x) -> f(x)^g(x) * (g'(x)*ln f(x) + f'(x)*g(x)/f(x))
                 (f, g) => f.clone().exp(g.clone()).mul(
@@ -52,25 +52,24 @@ impl Expr {
 
             Bin(Log, f, g) => match (*f, *g) {
                 // ln x -> 1/x
-                (Self::Num(E), x @ Self::Var) => Self::Num(1.0).div(x),
+                (Num(E), x @ Var) => Num(1.0).div(x),
 
                 // ln f(x) -> f'(x)/f(x)
-                (Self::Num(E), f) => f.clone().derive().div(f),
+                (Num(E), f) => f.clone().derive().div(f),
 
                 // log_a x -> 1/(x ln a)
-                (a @ Self::Num(_), x @ Self::Var) => Self::Num(1.0).div(x.mul(a.ln())),
+                (a @ Num(_), x @ Var) => Num(1.0).div(x.mul(a.ln())),
 
                 // log_a f(x) -> f'(x)/(f(x) * ln a)
-                (a @ Self::Num(_), f) => f.clone().derive().div(f.mul(Self::ln(a))),
+                (a @ Num(_), f) => f.clone().derive().div(f.mul(a.ln())),
 
                 // log_x a -> (ln a)/(x (ln x)^2)
-                (x @ Self::Var, a @ Self::Num(_)) => {
-                    Self::ln(a).div(x.clone().mul(Self::ln(x).exp(2.0)))
-                }
+                (x @ Var, a @ Num(_)) => a.ln().div(x.clone().mul(x.ln().exp(2.0))),
 
                 // log_f(x) a -> (ln a)/(f(x) (ln f(x))^2) * ln f(x)
-                (f, a @ Self::Num(_)) => Self::ln(a)
-                    .div(f.clone().mul(Self::ln(f.clone()).exp(2.0)))
+                (f, a @ Num(_)) => a
+                    .ln()
+                    .div(f.clone().mul(f.clone().exp(2.0).ln()))
                     .mul(f.derive()),
 
                 (f, g) => g
@@ -92,8 +91,8 @@ impl Expr {
             }
             .mul(f.derive()),
 
-            Var => Self::Num(1.0),
-            Num(_) => Self::Num(0.0),
+            Var => Num(1.0),
+            Num(_) => Num(0.0),
         }
     }
 }
