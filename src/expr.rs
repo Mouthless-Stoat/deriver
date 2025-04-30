@@ -1,8 +1,10 @@
+use std::f64::consts::E;
+
 mod combinator;
 mod derive;
 mod display;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Trig {
     Sin,
     Cos,
@@ -13,7 +15,7 @@ pub enum Trig {
     Cot,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Bin {
     Add,
     Sub,
@@ -35,27 +37,7 @@ impl Bin {
     }
 }
 
-impl PartialEq for Bin {
-    fn eq(&self, other: &Self) -> bool {
-        self.precedence() == other.precedence()
-    }
-}
-
-impl Eq for Bin {}
-
-impl Ord for Bin {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.precedence().cmp(&other.precedence())
-    }
-}
-
-impl PartialOrd for Bin {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
     Bin(Bin, Box<Expr>, Box<Expr>),
     Trig(Trig, Box<Expr>),
@@ -64,6 +46,8 @@ pub enum Expr {
 }
 
 impl Expr {
+    pub const E: Expr = Expr::Num(E);
+
     pub fn is_unit(&self) -> bool {
         self.is_num() || self.is_var()
     }
@@ -126,25 +110,5 @@ impl From<f64> for Expr {
 impl From<usize> for Expr {
     fn from(value: usize) -> Self {
         Expr::Num(value as f64)
-    }
-}
-
-impl PartialEq for Expr {
-    fn eq(&self, other: &Self) -> bool {
-        self.precedence() == other.precedence()
-    }
-}
-
-impl Eq for Expr {}
-
-impl Ord for Expr {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.precedence().cmp(&other.precedence())
-    }
-}
-
-impl PartialOrd for Expr {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
     }
 }

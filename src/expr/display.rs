@@ -15,11 +15,11 @@ impl Display for Expr {
                 let mut a_str = a.to_string();
                 let mut b_str = b.to_string();
 
-                if **a < *self {
+                if a.precedence() < self.precedence() {
                     a_str = format!("({a})");
                 }
 
-                if **b < *self {
+                if b.precedence() < self.precedence() {
                     b_str = format!("({b})");
                 }
 
