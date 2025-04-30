@@ -83,6 +83,38 @@ impl Expr {
             Expr::Var | Expr::Num(_) => 100,
         }
     }
+
+    pub fn evaluate(self, value: f64) -> f64 {
+        match self {
+            Expr::Bin(bin, a, b) => {
+                let a = a.evaluate(value);
+                let b = b.evaluate(value);
+
+                match bin {
+                    Bin::Add => a + b,
+                    Bin::Sub => a - b,
+                    Bin::Div => a / b,
+                    Bin::Mul => a * b,
+                    Bin::Exp => a.powf(b),
+                    Bin::Log => a.log(b),
+                }
+            }
+            Expr::Trig(trig, v) => {
+                let (sin, cos) = v.evaluate(value).sin_cos();
+
+                match trig {
+                    Trig::Sin => sin,
+                    Trig::Cos => cos,
+                    Trig::Tan => sin / cos,
+                    Trig::Csc => sin.recip(),
+                    Trig::Sec => sin.recip(),
+                    Trig::Cot => cos / sin,
+                }
+            }
+            Expr::Var => value,
+            Expr::Num(n) => n,
+        }
+    }
 }
 
 impl From<f64> for Expr {
