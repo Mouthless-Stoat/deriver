@@ -14,7 +14,7 @@ impl Expr {
                 .clone()
                 .derive()
                 .mul(*g.clone())
-                .add(f.mul(g.clone().derive()))
+                .sub(f.mul(g.clone().derive()))
                 .div(g.exp(2.0)),
             Bin(Mul, f, g) => f.clone().derive().mul(*g.clone()).add(g.derive().mul(*f)),
 
