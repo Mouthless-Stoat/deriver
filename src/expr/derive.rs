@@ -14,7 +14,7 @@ impl Expr {
                 .clone()
                 .derive()
                 .mul(*g.clone())
-                .sub(f.mul(g.clone().derive()))
+                .sub(g.clone().derive().mul(*f))
                 .div(g.exp(2.0)),
             Bin(Mul, f, g) => f.clone().derive().mul(*g.clone()).add(g.derive().mul(*f)),
 
@@ -56,6 +56,9 @@ impl Expr {
 
                 // ln f(x) -> f'(x)/f(x)
                 (Self::Num(E), f) => f.clone().derive().div(f),
+
+                // log_a x -> 1/(x ln a)
+                (a @ Self::Num(_), x @ Self::Var) => Self::Num(1.0).div(x.mul(a.ln())),
 
                 // log_a f(x) -> f'(x)/(f(x) * ln a)
                 (a @ Self::Num(_), f) => f.clone().derive().div(f.mul(Self::ln(a))),
