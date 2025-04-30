@@ -36,7 +36,7 @@ impl Expr {
     /// log base expr of another value.
     /// If the expr is `x` and the other is `a`, the result will be `log_x (a)`
     pub fn log(self, f: impl Into<Expr>) -> Self {
-        Bin(Log, Box::new(self), Box::new(f.into()))
+        Bin(Log, Box::new(f.into()), Box::new(self))
     }
 
     pub fn ln(self) -> Self {
