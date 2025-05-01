@@ -42,10 +42,10 @@ mod basic {
 
     #[test]
     fn product_rule() {
-        let f = Var.exp(2.0);
-        let g = Var.exp(3.0);
-        let f_prime = Num(2.0).mul(Var);
-        let g_prime = Num(3.0).mul(Var.exp(2.0));
+        let f = Var.sprt();
+        let g = Var.exp(2.0);
+        let f_prime = Num(1.0 / 2.0).mul(Var.exp(-1.0 / 2.0));
+        let g_prime = Num(2.0).mul(Var);
 
         assert_eq!(
             f.clone().mul(g.clone()).derive(),
@@ -55,10 +55,10 @@ mod basic {
 
     #[test]
     fn quotient_rule() {
-        let f = Var.exp(2.0);
-        let g = Var.exp(3.0);
-        let f_prime = Num(2.0).mul(Var);
-        let g_prime = Num(3.0).mul(Var.exp(2.0));
+        let f = Var.sprt();
+        let g = Var.exp(2.0);
+        let f_prime = Num(1.0 / 2.0).mul(Var.exp(-1.0 / 2.0));
+        let g_prime = Num(2.0).mul(Var);
 
         assert_eq!(
             f.clone().div(g.clone()).derive(),
@@ -94,6 +94,90 @@ mod basic {
         assert_eq!(
             Num(2.0).log(Var).derive(),
             Num(2.0).ln().div(Var.mul(Var.ln().exp(2.0)))
+        )
+    }
+}
+
+mod chain {
+    use crate::prelude::*;
+
+    #[test]
+    fn f_a_rule() {
+        assert_eq!(
+            Var.sprt().exp(2.0).derive(),
+            Num(2.0)
+                .mul(Var.sprt())
+                .mul(Num(1.0 / 2.0).mul(Var.exp(-1.0 / 2.0)))
+        )
+    }
+
+    #[test]
+    fn a_f_rule() {
+        assert_eq!(
+            Num(2.0).exp(Var.exp(2.0)).derive(),
+            Num(2.0)
+                .exp(Var.exp(2.0))
+                .mul(Num(2.0).ln())
+                .mul(Num(2.0).mul(Var))
+        )
+    }
+
+    #[test]
+    fn e_f_rule() {
+        assert_eq!(
+            Expr::E.exp(Var.exp(2.0)).derive(),
+            Expr::E.exp(Var.exp(2.0)).mul(Num(2.0).mul(Var))
+        )
+    }
+
+    #[test]
+    fn f_g_rule() {
+        let f = Var.sprt();
+        let g = Var.exp(2.0);
+        let f_prime = Num(1.0 / 2.0).mul(Var.exp(-1.0 / 2.0));
+        let g_prime = Num(2.0).mul(Var);
+
+        assert_eq!(
+            f.clone().exp(g.clone()).derive(),
+            f.clone().exp(g.clone()).mul(
+                g_prime
+                    .clone()
+                    .mul(f.clone().ln())
+                    .add(f_prime.mul(g.clone()).div(f))
+            )
+        )
+    }
+
+    #[test]
+    fn ln_f_rule() {
+        assert_eq!(
+            Var.exp(2.0).ln().derive(),
+            Num(2.0).mul(Var).div(Var.exp(2.0))
+        )
+    }
+
+    #[test]
+    fn log_a_f() {
+        assert_eq!(
+            Var.exp(2.0).log(2.0).derive(),
+            Num(2.0).mul(Var).div(Var.exp(2.0).mul(Num(2.0).ln()))
+        )
+    }
+
+    #[test]
+    fn log_f_g() {
+        let f = Var.sprt();
+        let g = Var.exp(2.0);
+        let f_prime = Num(1.0 / 2.0).mul(Var.exp(-1.0 / 2.0));
+        let g_prime = Num(2.0).mul(Var);
+
+        assert_eq!(
+            g.clone().log(f.clone()).derive(),
+            g_prime
+                .mul(f.clone().ln())
+                .div(g.clone())
+                .sub(f_prime.mul(g.ln()).div(f.clone()))
+                .div(f.ln().exp(2.0))
         )
     }
 }
