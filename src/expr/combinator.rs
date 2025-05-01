@@ -6,6 +6,7 @@ use super::{
     Trig,
 };
 
+#[allow(clippy::should_implement_trait)]
 impl Expr {
     /// Add this expr to another.
     pub fn add(self, f: impl Into<Expr>) -> Self {
@@ -31,6 +32,21 @@ impl Expr {
     /// If the expr is `x` and the other is `a`, the result will be `x^a`
     pub fn exp(self, f: impl Into<Expr>) -> Self {
         Bin(Exp, Box::new(self), Box::new(f.into()))
+    }
+
+    /// The the nth root of this expr. This does not produce a div expr but instead pre-compute the
+    /// value
+    pub fn root_n(self, n: f64) -> Self {
+        Bin(Exp, Box::new(self), Box::new((1.0 / n).into()))
+    }
+
+    /// Take the root of this expr.
+    pub fn root(self, f: impl Into<Expr>) -> Self {
+        Bin(Exp, Box::new(self), Box::new(Num(1.0).div(f.into())))
+    }
+
+    pub fn sprt(self) -> Self {
+        Bin(Exp, Box::new(self), Box::new((1.0 / 2.0).into()))
     }
 
     /// log base expr of another value.
