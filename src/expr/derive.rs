@@ -20,14 +20,19 @@ impl Expr {
 
             Bin(Exp, f, g) => match (*f, *g) {
                 // x^a -> ax^(a-1)
-                (x @ Var, a @ Num(n)) => match n - 1.0 {
-                    0.0 => a,
-                    1.0 => a.mul(x),
-                    p => a.mul(x.exp(p)),
-                },
-
-                // f(x)^n -> af(x)^(a-1)*f'(x)
-                (f, a @ Num(n)) => a.mul(f.clone().exp(n - 1.0)).mul(f.derive()),
+                // Also handle chaining
+                (f, a @ Num(n)) => {
+                    let t = match n - 1.0 {
+                        0.0 => a,
+                        1.0 => a.mul(f.clone()),
+                        p => a.mul(f.clone().exp(p)),
+                    };
+                    if !matches!(f, Var) {
+                        t.mul(f.derive())
+                    } else {
+                        t
+                    }
+                }
 
                 // e^x -> e^x
                 (e @ Num(E), x @ Var) => e.exp(x),
@@ -46,7 +51,7 @@ impl Expr {
                     g.clone()
                         .derive()
                         .mul(f.clone().ln())
-                        .mul(f.clone().derive().mul(g).div(f)),
+                        .add(f.clone().derive().mul(g).div(f)),
                 ),
             },
 
@@ -60,18 +65,19 @@ impl Expr {
                 // log_a x -> 1/(x ln a)
                 (a @ Num(_), x @ Var) => Num(1.0).div(x.mul(a.ln())),
 
-                // log_a f(x) -> f'(x)/(f(x) * ln a)
+                // log_a f(x) -> f'(x)/(f(x) ln a)
                 (a @ Num(_), f) => f.clone().derive().div(f.mul(a.ln())),
 
                 // log_x a -> (ln a)/(x (ln x)^2)
                 (x @ Var, a @ Num(_)) => a.ln().div(x.clone().mul(x.ln().exp(2.0))),
 
-                // log_f(x) a -> (ln a)/(f(x) (ln f(x))^2) * ln f(x)
+                // log_f(x) a -> (ln a)/(f(x) (ln f(x))^2) ln f(x)
                 (f, a @ Num(_)) => a
                     .ln()
                     .div(f.clone().mul(f.clone().exp(2.0).ln()))
                     .mul(f.derive()),
 
+                // log_f(x) g(x) -> ((g'(x) ln f(x)) / g(x) - (f'(x) ln g(x) / f(x))) / (ln f(x))^2
                 (f, g) => g
                     .clone()
                     .derive()
