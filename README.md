@@ -4,5 +4,5 @@ Project to derive expression. Written for fun. The project does not attempts to 
 
 # TODO
 
--   [ ] Test
--   [ ] parser
+-   [x] Test
+-   [x] parser
