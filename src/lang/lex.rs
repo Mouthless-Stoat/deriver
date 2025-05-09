@@ -29,12 +29,12 @@ pub enum TokenType {
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub(crate) struct Token {
-    pub(crate) token: TokenType,
-    pub(crate) loc: usize,
+    pub token: TokenType,
+    pub loc: usize,
 }
 
 impl Token {
-    pub(crate) fn end() -> Self {
+    pub fn end() -> Self {
         Self {
             token: TokenType::END,
             loc: usize::MAX,
@@ -43,7 +43,7 @@ impl Token {
 }
 
 impl TokenType {
-    pub(crate) fn at(self, loc: usize) -> Token {
+    pub fn at(self, loc: usize) -> Token {
         Token { token: self, loc }
     }
 }
@@ -76,7 +76,7 @@ pub(crate) fn lex(source: &str) -> Res<Vec<Token>> {
             };
 
             if let Some(token) = tk_opt {
-                tokens.push(Token { token, loc });
+                tokens.push(token.at(loc));
                 continue;
             } else {
                 return Err(LangError::InvalidSymbol(char, loc));
@@ -98,10 +98,7 @@ pub(crate) fn lex(source: &str) -> Res<Vec<Token>> {
 
         if is_num {
             if acc.chars().filter(|&c| c == '.' || c == ',').count() <= 1 {
-                tokens.push(Token {
-                    token: TokenType::Num(acc.parse().unwrap()),
-                    loc,
-                });
+                tokens.push(TokenType::Num(acc.parse().unwrap()).at(loc));
                 continue;
             }
 
@@ -123,17 +120,14 @@ pub(crate) fn lex(source: &str) -> Res<Vec<Token>> {
             };
 
             if let Some(token) = word_opt {
-                tokens.push(Token { token, loc });
+                tokens.push(token.at(loc));
             } else {
                 return Err(LangError::InvalidWord(acc, loc));
             }
         }
     }
 
-    tokens.push(Token {
-        token: TokenType::END,
-        loc: usize::MAX,
-    });
+    tokens.push(Token::end());
 
     Ok(tokens)
 }
