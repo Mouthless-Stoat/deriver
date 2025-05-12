@@ -58,7 +58,7 @@ impl Parser {
             | TokenType::Cot) => {
                 self.next();
 
-                self.parse_exp_bin()?.trig(match func {
+                self.parse_juxta()?.trig(match func {
                     TokenType::Sin => Trig::Sin,
                     TokenType::Cos => Trig::Cos,
                     TokenType::Tan => Trig::Tan,
@@ -80,11 +80,30 @@ impl Parser {
                     Expr::Num(10.0)
                 };
 
-                self.parse_exp_bin()?.log(base)
+                self.parse_juxta()?.log(base)
             }
 
-            _ => self.parse_exp_bin()?,
+            _ => self.parse_juxta()?,
         })
+    }
+
+    fn parse_juxta(&mut self) -> Res<Expr> {
+        let mut left = self.parse_exp_bin()?;
+        while !matches!(
+            self.curr(),
+            TokenType::Plus
+                | TokenType::Minus
+                | TokenType::Star
+                | TokenType::Slash
+                | TokenType::Caret
+                | TokenType::CloseParen
+                | TokenType::END
+        ) {
+            let right = self.parse()?;
+            left = left.mul(right);
+        }
+
+        Ok(left)
     }
 
     fn parse_exp_bin(&mut self) -> Res<Expr> {

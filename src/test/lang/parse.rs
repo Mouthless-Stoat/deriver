@@ -57,3 +57,48 @@ fn log_complex_base() {
         Expr::Num(10.0).log(Expr::Var.exp(2.0))
     )
 }
+
+#[test]
+fn func_mul() {
+    assert_eq!(
+        "sin x * x".parse::<Expr>().unwrap(),
+        Expr::Var.trig(Trig::Sin).mul(Expr::Var)
+    )
+}
+
+#[test]
+fn juxta() {
+    assert_eq!("5x".parse::<Expr>().unwrap(), Expr::Num(5.0).mul(Expr::Var))
+}
+
+#[test]
+fn juxta_exp() {
+    assert_eq!(
+        "5x^3".parse::<Expr>().unwrap(),
+        Expr::Num(5.0).mul(Expr::Var.exp(3.0))
+    )
+}
+
+#[test]
+fn juxta_func_arg() {
+    assert_eq!(
+        "sin 5x^2".parse::<Expr>().unwrap(),
+        Expr::Num(5.0).mul(Expr::Var.exp(2.0)).trig(Trig::Sin)
+    )
+}
+
+#[test]
+fn juxta_func() {
+    assert_eq!(
+        "x sin x".parse::<Expr>().unwrap(),
+        Expr::Var.mul(Expr::Var.trig(Trig::Sin))
+    )
+}
+
+#[test]
+fn juxta_paren() {
+    assert_eq!(
+        "5(4)x".parse::<Expr>().unwrap(),
+        Expr::Num(5.0).mul(Expr::Num(4.0).mul(Expr::Var))
+    )
+}
